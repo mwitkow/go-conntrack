@@ -1,3 +1,6 @@
+// Copyright 2016 Michal Witkowski. All Rights Reserved.
+// See LICENSE for licensing terms.
+
 package main
 
 import (
@@ -8,6 +11,13 @@ import (
 
 	"crypto/tls"
 	"fmt"
+
+	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/net/context/ctxhttp"
+	_ "golang.org/x/net/trace"
+	"github.com/mwitkow/go-conntrack"
 )
 
 var (
@@ -20,21 +30,39 @@ var (
 func main() {
 	flag.Parse()
 
+	// Make sure all outbound connections use the wrapped dialer.
+	http.DefaultTransport.(*http.Transport).DialContext = conntrack.NewDialContextFunc(
+		conntrack.DialWithTracing(),
+		conntrack.DialWithDialer(&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}),
+	)
+	// Since we're using a dynamic name, let's preregister it with prometheus.
+	conntrack.PreRegisterDialerMetrics("google")
+
 	handler := func(resp http.ResponseWriter, req *http.Request) {
 		resp.WriteHeader(http.StatusOK)
 		resp.Header().Add("Content-Type", "application/json")
 		resp.Write([]byte(`{"msg": "hello"}`))
+		callCtx := conntrack.DialNameToContext(req.Context(), "google")
+		_, err := ctxhttp.Get(callCtx, http.DefaultClient, "https://www.google.comx")
+		log.Printf("Google reached with err: %v", err)
 		log.Printf("Got request: %v", req)
 	}
 
+	http.DefaultServeMux.Handle("/", http.HandlerFunc(handler))
+	http.DefaultServeMux.Handle("/metrics", prometheus.Handler())
+
 	httpServer := http.Server{
-		Handler: http.HandlerFunc(handler),
+		Handler: http.DefaultServeMux,
 	}
 	var httpListener net.Listener
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
+	listener = conntrack.NewListener(listener, conntrack.TrackWithTracing())
 	if !*useTls {
 		httpListener = listener
 	} else {
@@ -42,6 +70,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed configuring TLS: %v", err)
 		}
+		log.Printf("Listening with TLS")
 		//httpServer.TLSConfig = tlsConfig
 		tlsListener := tls.NewListener(listener, tlsConfig)
 		httpListener = tlsListener
