@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"golang.org/x/net/trace"
+	"time"
 )
 
 const (
@@ -20,6 +21,7 @@ type listenerOpts struct {
 	name       string
 	monitoring bool
 	tracing    bool
+	tcpKeepAlive time.Duration
 }
 
 type listenerOpt func(*listenerOpts)
@@ -42,6 +44,16 @@ func TrackWithoutMonitoring() listenerOpt {
 func TrackWithTracing() listenerOpt {
 	return func(opts *listenerOpts) {
 		opts.tracing = true
+	}
+}
+
+// TrackWithTcpKeepAlive makes sure that any `net.TCPConn` that get accepted have a keep-alive.
+// This is useful for HTTP servers in order for, for example laptops, to not use up resources on the
+// server while they don't utilise their connection.
+// A value of 0 disables it.
+func TrackWithTcpKeepAlive(keepalive time.Duration) listenerOpt {
+	return func(opts *listenerOpts) {
+		opts.tcpKeepAlive = keepalive
 	}
 }
 
@@ -74,6 +86,10 @@ func (ct *connTrackListener) Accept() (net.Conn, error) {
 	conn, err := ct.Listener.Accept()
 	if err != nil {
 		return nil, err
+	}
+	if tcpConn, ok := conn.(net.TCPConn); ok && ct.opts.tcpKeepAlive > 0 {
+		tcpConn.SetKeepAlive(true)
+		tcpConn.SetKeepAlivePeriod(ct.opts.tcpKeepAlive)
 	}
 	return newServerConnTracker(conn, ct.opts), nil
 }
