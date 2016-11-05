@@ -71,7 +71,7 @@ func DialNameToContext(ctx context.Context, dialerName string) context.Context {
 
 // NewDialContextFunc returns a `DialContext` function that tracks outbound connections.
 // The signature is compatible with `http.Tranport.DialContext` and is meant to be used there.
-func NewDialContextFunc(optFuncs ...dialerOpt) func(context.Context, string, string) (net.Conn, error) {
+func NewDialContextFunc(optFuncs ...dialerOpt) (func(context.Context, string, string) (net.Conn, error)) {
 	opts := &dialerOpts{name: defaultName, monitoring: true, parentDialer: &net.Dialer{}}
 	for _, f := range optFuncs {
 		f(opts)
@@ -90,7 +90,7 @@ func NewDialContextFunc(optFuncs ...dialerOpt) func(context.Context, string, str
 
 // NewDialFunc returns a `Dial` function that tracks outbound connections.
 // The signature is compatible with `http.Tranport.Dial` and is meant to be used there for Go < 1.7.
-func NewDialFunc(optFuncs ...dialerOpt) func(string, string) (net.Conn, error) {
+func NewDialFunc(optFuncs ...dialerOpt) (func(string, string) (net.Conn, error)) {
 	dialContextFunc := NewDialContextFunc(optFuncs...)
 	return func(network string, addr string) (net.Conn, error) {
 		return dialContextFunc(context.TODO(), network, addr)
