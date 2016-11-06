@@ -18,9 +18,9 @@ const (
 )
 
 type listenerOpts struct {
-	name       string
-	monitoring bool
-	tracing    bool
+	name         string
+	monitoring   bool
+	tracing      bool
 	tcpKeepAlive time.Duration
 }
 

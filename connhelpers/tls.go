@@ -8,9 +8,7 @@ import (
 	"fmt"
 )
 
-
-
-// TlsConfigForCerts is a returns a simple `tls.Config` with the given server cert loaded.
+// TlsConfigForServerCerts is a returns a simple `tls.Config` with the given server cert loaded.
 // This is useful if you can't use `http.ListenAndServerTLS` when using a custom `net.Listener`.
 func TlsConfigForServerCerts(certFile string, keyFile string) (*tls.Config, error) {
 	var err error

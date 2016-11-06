@@ -14,11 +14,11 @@ import (
 
 	"time"
 
+	"github.com/mwitkow/go-conntrack"
+	"github.com/mwitkow/go-conntrack/connhelpers"
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/net/context/ctxhttp"
 	_ "golang.org/x/net/trace"
-	"github.com/mwitkow/go-conntrack"
-	"github.com/mwitkow/go-conntrack/connhelpers"
 )
 
 var (

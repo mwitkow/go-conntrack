@@ -84,7 +84,7 @@ func (s *DialerTestSuite) TestDialerMetricsAreNotPreregisteredWithMonitoringOff(
 		{"net_conntrack_dialer_conn_failed_total", []string{"nomon", "unknown"}},
 	} {
 		lineCount := len(fetchPrometheusLines(s.T(), testCase.metricName, testCase.existingLabels...))
-		assert.Equal(s.T(), 0, lineCount, "metrics shoudl not be registered exist for test case %d", testId)
+		assert.Equal(s.T(), 0, lineCount, "metrics should not be registered exist for test case %d", testId)
 	}
 }
 
