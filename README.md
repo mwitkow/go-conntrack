@@ -78,9 +78,9 @@ httpServer.Serve(listener)
 
 # Status
 
-This code has been running in production since Nov 2016 as the basis of the HTTP front-ending stack at Improbable.
+This code is being tried out in staging environments of Improbable's HTTP frontending stack ATM.
 
-Additional tooling will be added, and contributions are welcome.
+Additional tooling will be added if needed, and contributions are welcome.
 
 #License
 
