@@ -87,7 +87,7 @@ func (ct *connTrackListener) Accept() (net.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	if tcpConn, ok := conn.(net.TCPConn); ok && ct.opts.tcpKeepAlive > 0 {
+	if tcpConn, ok := conn.(*net.TCPConn); ok && ct.opts.tcpKeepAlive > 0 {
 		tcpConn.SetKeepAlive(true)
 		tcpConn.SetKeepAlivePeriod(ct.opts.tcpKeepAlive)
 	}
