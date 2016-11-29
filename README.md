@@ -78,7 +78,7 @@ httpServer.Serve(listener)
 
 # Status
 
-This code is being tried out in staging environments of Improbable's HTTP frontending stack ATM.
+This code is used by Improbable's HTTP frontending and proxying stack for debuging and monitoring of established user connections.
 
 Additional tooling will be added if needed, and contributions are welcome.
 
