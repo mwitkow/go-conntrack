@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,7 +17,7 @@ func fetchPrometheusLines(t *testing.T, metricName string, matchingLabelValues .
 	resp := httptest.NewRecorder()
 	req, err := http.NewRequest("GET", "/", nil)
 	require.NoError(t, err, "failed creating request for Prometheus handler")
-	prometheus.Handler().ServeHTTP(resp, req)
+	promhttp.Handler().ServeHTTP(resp, req)
 	reader := bufio.NewReader(resp.Body)
 	ret := []string{}
 	for {

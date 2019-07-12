@@ -4,19 +4,17 @@
 package main
 
 import (
+	"crypto/tls"
 	"flag"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
-
-	"crypto/tls"
-	"fmt"
-
 	"time"
 
 	"github.com/mwitkow/go-conntrack"
 	"github.com/mwitkow/go-conntrack/connhelpers"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/net/context/ctxhttp"
 	_ "golang.org/x/net/trace"
 )
@@ -53,7 +51,7 @@ func main() {
 	}
 
 	http.DefaultServeMux.Handle("/", http.HandlerFunc(handler))
-	http.DefaultServeMux.Handle("/metrics", prometheus.Handler())
+	http.DefaultServeMux.Handle("/metrics", promhttp.Handler())
 
 	httpServer := http.Server{
 		Handler: http.DefaultServeMux,
