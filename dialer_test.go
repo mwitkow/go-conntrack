@@ -8,7 +8,6 @@ import (
 	"net"
 	"net/http"
 	"testing"
-
 	"time"
 
 	"github.com/mwitkow/go-conntrack"

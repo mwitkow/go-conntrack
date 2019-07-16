@@ -6,11 +6,10 @@ package conntrack
 import (
 	"fmt"
 	"net"
-
 	"sync"
+	"time"
 
 	"golang.org/x/net/trace"
-	"time"
 )
 
 const (
