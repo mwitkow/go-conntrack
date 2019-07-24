@@ -8,8 +8,9 @@ go:
 - "1.12"
 
 install:
-- go get github.com/stretchr/testify
+- go get github.com/jpillora/backoff
 - go get github.com/prometheus/client_golang/prometheus
+- go get github.com/stretchr/testify
 - go get golang.org/x/net/context
 - go get golang.org/x/net/trace
 
