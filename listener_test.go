@@ -58,8 +58,10 @@ func (s *ListenerTestSuite) TestTrackingMetricsPreregistered() {
 	}{
 		{"net_conntrack_listener_conn_accepted_total", []string{"default"}},
 		{"net_conntrack_listener_conn_closed_total", []string{"default"}},
+		{"net_conntrack_listener_conn_open", []string{"default"}},
 		{"net_conntrack_listener_conn_accepted_total", []string{listenerName}},
 		{"net_conntrack_listener_conn_closed_total", []string{listenerName}},
+		{"net_conntrack_listener_conn_open", []string{listenerName}},
 	} {
 		lineCount := len(fetchPrometheusLines(s.T(), testCase.metricName, testCase.existingLabels...))
 		assert.NotEqual(s.T(), 0, lineCount, "metrics must exist for test case %d", testId)
@@ -70,6 +72,7 @@ func (s *ListenerTestSuite) TestMonitoringNormalConns() {
 
 	beforeAccepted := sumCountersForMetricAndLabels(s.T(), "net_conntrack_listener_conn_accepted_total", listenerName)
 	beforeClosed := sumCountersForMetricAndLabels(s.T(), "net_conntrack_listener_conn_closed_total", listenerName)
+	beforeOpen := sumCountersForMetricAndLabels(s.T(), "net_conntrack_listener_conn_open", listenerName)
 
 	conn, err := (&net.Dialer{}).DialContext(context.TODO(), "tcp", s.serverListener.Addr().String())
 	require.NoError(s.T(), err, "DialContext should successfully establish a conn here")
@@ -77,9 +80,13 @@ func (s *ListenerTestSuite) TestMonitoringNormalConns() {
 		"the accepted conn counter must be incremented after connection was opened")
 	assert.Equal(s.T(), beforeClosed, sumCountersForMetricAndLabels(s.T(), "net_conntrack_listener_conn_closed_total", listenerName),
 		"the closed conn counter must not be incremented before the connection is closed")
+	assert.Equal(s.T(), beforeOpen+1, sumCountersForMetricAndLabels(s.T(), "net_conntrack_listener_conn_open", listenerName),
+		"the open conn must be incremented when the connection is opened")
 	conn.Close()
 	assert.Equal(s.T(), beforeClosed+1, sumCountersForMetricAndLabels(s.T(), "net_conntrack_listener_conn_closed_total", listenerName),
 		"the closed conn counter must be incremented after connection was closed")
+	assert.Equal(s.T(), beforeOpen, sumCountersForMetricAndLabels(s.T(), "net_conntrack_listener_conn_open", listenerName),
+		"the open conn must be decremented when the connection is closed")
 }
 
 func (s *ListenerTestSuite) TestTracingNormalComms() {

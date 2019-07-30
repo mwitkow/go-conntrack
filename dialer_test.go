@@ -62,6 +62,9 @@ func (s *DialerTestSuite) TestDialerMetricsArePreregistered() {
 		{"net_conntrack_dialer_conn_failed_total", []string{"default", "refused"}},
 		{"net_conntrack_dialer_conn_failed_total", []string{"default", "timeout"}},
 		{"net_conntrack_dialer_conn_failed_total", []string{"default", "unknown"}},
+		{"net_conntrack_dialer_conn_open", []string{"default"}},
+		{"net_conntrack_dialer_conn_open", []string{"foobar"}},
+		{"net_conntrack_dialer_conn_open", []string{"something_manual"}},
 	} {
 		lineCount := len(fetchPrometheusLines(s.T(), testCase.metricName, testCase.existingLabels...))
 		assert.NotEqual(s.T(), 0, lineCount, "metrics must exist for test case %d", testId)
@@ -81,6 +84,7 @@ func (s *DialerTestSuite) TestDialerMetricsAreNotPreregisteredWithMonitoringOff(
 		{"net_conntrack_dialer_conn_failed_total", []string{"nomon", "refused"}},
 		{"net_conntrack_dialer_conn_failed_total", []string{"nomon", "timeout"}},
 		{"net_conntrack_dialer_conn_failed_total", []string{"nomon", "unknown"}},
+		{"net_conntrack_dialer_conn_open", []string{"nomon"}},
 	} {
 		lineCount := len(fetchPrometheusLines(s.T(), testCase.metricName, testCase.existingLabels...))
 		assert.Equal(s.T(), 0, lineCount, "metrics should not be registered exist for test case %d", testId)
@@ -93,6 +97,7 @@ func (s *DialerTestSuite) TestDialerUnderNormalConnection() {
 	beforeAttempts := sumCountersForMetricAndLabels(s.T(), "net_conntrack_dialer_conn_attempted_total", "normal_conn")
 	beforeEstablished := sumCountersForMetricAndLabels(s.T(), "net_conntrack_dialer_conn_established_total", "normal_conn")
 	beforeClosed := sumCountersForMetricAndLabels(s.T(), "net_conntrack_dialer_conn_closed_total", "normal_conn")
+	beforeOpen := sumCountersForMetricAndLabels(s.T(), "net_conntrack_dialer_conn_open", "normal_conn")
 
 	conn, err := dialFunc(context.TODO(), "tcp", s.serverListener.Addr().String())
 	require.NoError(s.T(), err, "NewDialContextFunc should successfully establish a conn here")
@@ -102,9 +107,13 @@ func (s *DialerTestSuite) TestDialerUnderNormalConnection() {
 		"the established conn counter must be incremented after connection was opened")
 	assert.Equal(s.T(), beforeClosed, sumCountersForMetricAndLabels(s.T(), "net_conntrack_dialer_conn_closed_total", "normal_conn"),
 		"the closed conn counter must not be incremented after connection was opened")
+	assert.Equal(s.T(), beforeOpen+1, sumCountersForMetricAndLabels(s.T(), "net_conntrack_dialer_conn_open", "normal_conn"),
+		"the open conn gauge must be incremented after connection was opened")
 	conn.Close()
 	assert.Equal(s.T(), beforeClosed+1, sumCountersForMetricAndLabels(s.T(), "net_conntrack_dialer_conn_established_total", "normal_conn"),
 		"the closed conn counter must be incremented after connection was closed")
+	assert.Equal(s.T(), beforeOpen, sumCountersForMetricAndLabels(s.T(), "net_conntrack_dialer_conn_open", "normal_conn"),
+		"the open conn gauge must be decremented after connection was closed")
 }
 
 func (s *DialerTestSuite) TestDialerWithContextName() {

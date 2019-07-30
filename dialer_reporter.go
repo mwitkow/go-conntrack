@@ -53,6 +53,14 @@ var (
 			Name:      "dialer_conn_closed_total",
 			Help:      "Total number of connections closed which originated from the dialer of a given name.",
 		}, []string{"dialer_name"})
+
+	dialerConnOpen = prom.NewGaugeVec(
+		prom.GaugeOpts{
+			Namespace: "net",
+			Subsystem: "conntrack",
+			Name:      "dialer_conn_open",
+			Help:      "Number of open connections which originated from the dialer of a given name.",
+		}, []string{"dialer_name"})
 )
 
 func init() {
@@ -60,6 +68,7 @@ func init() {
 	prom.MustRegister(dialerConnEstablishedTotal)
 	prom.MustRegister(dialerConnFailedTotal)
 	prom.MustRegister(dialerConnClosedTotal)
+	prom.MustRegister(dialerConnOpen)
 }
 
 // preRegisterDialerMetrics pre-populates Prometheus labels for the given dialer name, to avoid Prometheus missing labels issue.
@@ -70,6 +79,7 @@ func PreRegisterDialerMetrics(dialerName string) {
 		dialerConnFailedTotal.WithLabelValues(dialerName, string(reason))
 	}
 	dialerConnClosedTotal.WithLabelValues(dialerName)
+	dialerConnOpen.WithLabelValues(dialerName)
 }
 
 func reportDialerConnAttempt(dialerName string) {
@@ -78,10 +88,12 @@ func reportDialerConnAttempt(dialerName string) {
 
 func reportDialerConnEstablished(dialerName string) {
 	dialerConnEstablishedTotal.WithLabelValues(dialerName).Inc()
+	dialerConnOpen.WithLabelValues(dialerName).Inc()
 }
 
 func reportDialerConnClosed(dialerName string) {
 	dialerConnClosedTotal.WithLabelValues(dialerName).Inc()
+	dialerConnOpen.WithLabelValues(dialerName).Dec()
 }
 
 func reportDialerConnFailed(dialerName string, err error) {
