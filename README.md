@@ -54,7 +54,7 @@ listener, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 listener = conntrack.NewListener(listener, 
     conntrack.TrackWithName("http"), 
     conntrack.TrackWithTracing(),
-    conntrack.TrackWithTcpKeepAlive(5 * time.Minutes))
+    conntrack.TrackWithTcpKeepAlive(5 * time.Minute))
 httpServer.Serve(listener) 
 ```
 
@@ -62,7 +62,7 @@ Note, the `TrackWithTcpKeepAlive`. The default `http.ListenAndServe` adds a tcp 
 
 #### TLS server example
 
-The standard lobrary `http.ListenAndServerTLS` does a lot to bootstrap TLS connections, including supporting HTTP2 negotiation. Unfortunately, that is hard to do if you want to provide your own `net.Listener`. That's why this repo comes with `connhelpers` package, which takes care of configuring `tls.Config` for that use case. Here's an example of use:
+The standard library `http.ListenAndServerTLS` does a lot to bootstrap TLS connections, including supporting HTTP2 negotiation. Unfortunately, that is hard to do if you want to provide your own `net.Listener`. That's why this repo comes with `connhelpers` package, which takes care of configuring `tls.Config` for that use case. Here's an example of use:
 
 ```go
 listener, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
