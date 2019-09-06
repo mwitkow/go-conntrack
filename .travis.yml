@@ -1,17 +1,20 @@
 sudo: false
 language: go
 go:
-- "1.8"
-- "1.9"
-- "1.10"
-- "1.11"
-- "1.12"
+- "1.9.x"
+- "1.10.x"
+- "1.11.x"
+- "1.12.x"
+
+env:
+- GO111MODULE=on
 
 install:
 - go get github.com/stretchr/testify
 - go get github.com/prometheus/client_golang/prometheus
 - go get golang.org/x/net/context
 - go get golang.org/x/net/trace
+- go get github.com/jpillora/backoff
 
 script:
 - go test -v ./...
