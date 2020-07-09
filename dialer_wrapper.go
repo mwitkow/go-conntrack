@@ -159,7 +159,7 @@ func (ct *clientConnTracker) Close() error {
 		ct.event = nil
 	}
 	ct.mu.Unlock()
-	if ct.opts.monitoring {
+	if ct.opts.monitoring && err == nil {
 		reportDialerConnClosed(ct.dialerName)
 	}
 	return err
