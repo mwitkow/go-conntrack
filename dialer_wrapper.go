@@ -23,40 +23,41 @@ type dialerOpts struct {
 	parentDialContextFunc dialerContextFunc
 }
 
-type dialerOpt func(*dialerOpts)
+// DialerOpt defines a config option you can set on the dialer.
+type DialerOpt func(*dialerOpts)
 
 type dialerContextFunc func(context.Context, string, string) (net.Conn, error)
 
 // DialWithName sets the name of the dialer for tracking and monitoring.
 // This is the name for the dialer (default is `default`), but for `NewDialContextFunc` can be overwritten from the
 // Context using `DialNameToContext`.
-func DialWithName(name string) dialerOpt {
+func DialWithName(name string) DialerOpt {
 	return func(opts *dialerOpts) {
 		opts.name = name
 	}
 }
 
 // DialWithoutMonitoring turns *off* Prometheus monitoring for this dialer.
-func DialWithoutMonitoring() dialerOpt {
+func DialWithoutMonitoring() DialerOpt {
 	return func(opts *dialerOpts) {
 		opts.monitoring = false
 	}
 }
 
 // DialWithTracing turns *on* the /debug/events tracing of the dial calls.
-func DialWithTracing() dialerOpt {
+func DialWithTracing() DialerOpt {
 	return func(opts *dialerOpts) {
 		opts.tracing = true
 	}
 }
 
 // DialWithDialer allows you to override the `net.Dialer` instance used to actually conduct the dials.
-func DialWithDialer(parentDialer *net.Dialer) dialerOpt {
+func DialWithDialer(parentDialer *net.Dialer) DialerOpt {
 	return DialWithDialContextFunc(parentDialer.DialContext)
 }
 
 // DialWithDialContextFunc allows you to override func gets used for the actual dialing. The default is `net.Dialer.DialContext`.
-func DialWithDialContextFunc(parentDialerFunc dialerContextFunc) dialerOpt {
+func DialWithDialContextFunc(parentDialerFunc dialerContextFunc) DialerOpt {
 	return func(opts *dialerOpts) {
 		opts.parentDialContextFunc = parentDialerFunc
 	}
@@ -78,7 +79,7 @@ func DialNameToContext(ctx context.Context, dialerName string) context.Context {
 
 // NewDialContextFunc returns a `DialContext` function that tracks outbound connections.
 // The signature is compatible with `http.Tranport.DialContext` and is meant to be used there.
-func NewDialContextFunc(optFuncs ...dialerOpt) func(context.Context, string, string) (net.Conn, error) {
+func NewDialContextFunc(optFuncs ...DialerOpt) func(context.Context, string, string) (net.Conn, error) {
 	opts := &dialerOpts{name: defaultName, monitoring: true, parentDialContextFunc: (&net.Dialer{}).DialContext}
 	for _, f := range optFuncs {
 		f(opts)
@@ -97,7 +98,7 @@ func NewDialContextFunc(optFuncs ...dialerOpt) func(context.Context, string, str
 
 // NewDialFunc returns a `Dial` function that tracks outbound connections.
 // The signature is compatible with `http.Tranport.Dial` and is meant to be used there for Go < 1.7.
-func NewDialFunc(optFuncs ...dialerOpt) func(string, string) (net.Conn, error) {
+func NewDialFunc(optFuncs ...DialerOpt) func(string, string) (net.Conn, error) {
 	dialContextFunc := NewDialContextFunc(optFuncs...)
 	return func(network string, addr string) (net.Conn, error) {
 		return dialContextFunc(context.TODO(), network, addr)
